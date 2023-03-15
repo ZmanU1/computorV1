@@ -4,7 +4,7 @@ from calcule import *
 
 def solution_z(x):
     s = x[1]/(2*x[2])
-    print(round(s, 4))
+    print(int(round(s, 4)))
 
 
 def solution_p(x, des):
@@ -25,12 +25,13 @@ def solution_n(x, des):
 def resolution(x):
     des = descriminant(x)
     if des > 0:
-        print("Discriminant is strictly positive, the two solutions are:")
+        print("Discriminant is strictly positive({}), the two solutions are:".format(round((des),2)))
         solution_p(x, des)
     elif des == 0:
         print ("Discriminant is null The only solution is:")
         solution_z(x)
     else:
+        print("Discriminant is negatif ({})".format(round((des), 2)))
         solution_n(x, des)
 
 
@@ -44,12 +45,22 @@ def ft_print_reduc(x):
     i = 0
     print("Reduced form: ", end="")
     for cle, val in x.items():
+
         if val < 0:
-            print("- {} * X^{} ".format(abs(val), cle), end="")
+            if round(val) != val:
+                print("- {} * X^{} ".format(abs(val), cle), end="")
+            else:
+                print("- {} * X^{} ".format(int(abs(val)), cle), end="")
         elif val >= 0 and i != 0:
-            print("+ {} * X^{} ".format(abs(val), cle), end="")
+            if round(val) != val: 
+                print("+ {} * X^{} ".format(abs(val), cle), end="")
+            else:
+                print("+ {} * X^{} ".format(int(abs(val)), cle), end="")
         else:
-            print("{} * X^{} ".format(abs(val), cle), end="")
+            if round(val) != val:
+                print("{} * X^{} ".format(abs(val), cle), end="")
+            else:
+                print("{} * X^{} ".format(int(abs(val)), cle), end="")
         i += 1
     print("= 0")
 
@@ -70,7 +81,6 @@ def ft_reduct(x1, x2):
         if i < 0:
             print(x1.keys())
             print("pas possible de resoudre ca !!")
-            exit()
         elif i > 2:
             print("plus que 3")
     if all(x1.values()):
@@ -81,9 +91,14 @@ def ft_reduct(x1, x2):
         exit()
 
 
-def ft_split(x, p):
+def ft_split(x):
     elem = x.split()
     x_co = [float(elem[i]) if elem[i-1] != "-" else float(elem[i])*(-1) for i in range(0, len(elem), 4)]
+    print(elem)
+    for i in range(2,len(elem),4):
+        if "." in elem[i] or "-" in elem[i]:
+            print("one of your coef is not Integer please fix it and retry")
+            exit(0)
     x_p = [int(elem[i][2:]) for i in range(2, len(elem), 4)]
     f = 0
     dict = {}
@@ -104,28 +119,61 @@ def ft_split(x, p):
 def parss(form):
     x = form.split("=")
     # x[0] la partie de droite de l'equation x[1] celle de gauche
-    xg = ft_split(x[0], 1)
-    xd = ft_split(x[1], -1)
-    x_red = ft_reduct(xg, xd)
-    ft_print_reduc(x_red)
-    d = degree(x_red)
+    #print()
+    xg = ft_split(x[0])
+    xd = ft_split(x[1])
+    xr = xg
+    len_g = len(xg) if len(xg) > len(xd) else len(xd)
+    #print(len_g)
+    if xd == xg:
+        print("tout les nombre reel sont solution")
+        exit(0)
+    for i in range(len_g):
+        if xd.get(i):
+            if xg.get(i):
+                xr[i] = xg.get(i) - xd.get(i)
+            else:
+                xr[i] = -xd.get(i)
+        elif xg.get(i):
+            xr[i] = xg.get(i)
+    #x_red = ft_reduct(xg, xd)
+    ft_print_reduc(xr)
+    for i in xr:
+        if type(i) is not int:
+            print("Error coeficient must be Integer")
+            exit(0)
+    d = degree(xr)
     if d == 0:
-        eq_zero_degree(xg, xd, x_red)
+        eq_zero_degree(xg, xd, xr)
     elif d == 1:
-        eq_first_deg(x_red)
+        eq_first_deg(xr)
     elif d > 2:
         print("The polynomial degree is stricly greater than 2, I can't solve.")
     else:
-        resolution(x_red)
+        resolution(xr)
 
 
 
 
 def start():
-    if len(sys.argv) != 2:
-        print("many argument")
+    if len(sys.argv) == 2:
+        str_eq = sys.argv[1]
+        size = len(str_eq.split("="))
+        if size == 2:
+            parss(str_eq)
+        elif size == 1:
+            print("Warning, no '=' in the expression!! \nY/y to continue other to stop by adding ' = 0' ?")
+            if  input().upper() == "Y":
+                str_eq  += " = 0"
+                run(str_eq)
+            else:
+                print("thank you and good bye")
+                exit(0)
+        else:
+            print("Error, multiple '=' found retry\n")
+            exit(0)
     else:
-        parss(str(sys.argv[1]))
+        print("Wrong format: Usage Python3 '[aX2 + bX + c = 0]' ")
 
 
 if __name__ == '__main__':
